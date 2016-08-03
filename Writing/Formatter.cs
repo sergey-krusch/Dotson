@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KruschJson.Writing
+namespace Dotson.Writing
 {
     public class Formatter
     {

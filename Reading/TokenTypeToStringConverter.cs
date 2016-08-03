@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace KruschJson.Reading
+namespace Dotson.Reading
 {
     internal class TokenTypeToStringConverter
     {

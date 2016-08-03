@@ -1,4 +1,4 @@
-﻿namespace KruschJson
+﻿namespace Dotson
 {
     public enum NodeType
     {

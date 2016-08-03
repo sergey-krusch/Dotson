@@ -1,4 +1,4 @@
-﻿namespace KruschJson.Writing
+﻿namespace Dotson.Writing
 {
     public interface IFormatterOutput
     {

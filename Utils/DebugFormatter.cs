@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace KruschJson.Utils
+namespace Dotson.Utils
 {
     public class DebugFormatter
     {

@@ -1,4 +1,4 @@
-﻿namespace KruschJson.Reading
+﻿namespace Dotson.Reading
 {
     internal enum TokenType
     {

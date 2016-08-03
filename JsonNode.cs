@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using KruschJson.Reading;
-using KruschJson.Writing;
+using Dotson.Reading;
+using Dotson.Writing;
 
-namespace KruschJson
+namespace Dotson
 {
     public class JsonNode
     {

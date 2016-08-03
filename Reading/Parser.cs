@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace KruschJson.Reading
+namespace Dotson.Reading
 {
     internal class Parser
     {

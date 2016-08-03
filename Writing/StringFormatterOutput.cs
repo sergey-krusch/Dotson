@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace KruschJson.Writing
+namespace Dotson.Writing
 {
     public class StringFormatterOutput: IFormatterOutput
     {
