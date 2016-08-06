@@ -8,7 +8,7 @@ namespace Dotson.Reading
     internal class Lexer
     {
         private const int surroundingRadius = 512;
-        private static readonly string[] booleanLiterals = new string[] { "True", "true", "False", "false" };
+        private static readonly string[] booleanLiterals = { "true", "false" };
         private const string noneLiteral = "none";
 
         private readonly StreamReader reader;
@@ -311,8 +311,6 @@ namespace Dotson.Reading
                 case '8':
                 case '9':
                     return ReadNumber();
-                case 'T':
-                case 'F':
                 case 't':
                 case 'f':
                     return ReadBoolean();
