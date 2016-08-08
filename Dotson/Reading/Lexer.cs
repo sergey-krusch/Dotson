@@ -82,11 +82,6 @@ namespace Dotson.Reading
             return CreateException("Wrong number.", line, symbol);
         }
 
-        private Exception CreateWrongBooleanException(int line, int symbol)
-        {
-            return CreateException("Wrong boolean.", line, symbol);
-        }
-
         private Exception CreateWrongLiteralException(int line, int symbol)
         {
             return CreateException("Wrong literal.", line, symbol);
@@ -95,6 +90,11 @@ namespace Dotson.Reading
         private bool IsNewLineChar(char c)
         {
             return c == '\u000A' || c == '\u000B' || c == '\u000C' || c == '\u000D' || c == '\u2028' || c == '\u2029';
+        }
+
+        private bool IsDigit(char c)
+        {
+            return c >= '0' && c <= '9';
         }
 
         private char? PeekChar(bool skipWhitespaces)
@@ -211,23 +211,103 @@ namespace Dotson.Reading
             int beginLine = currentLine;
             int beginSymbol = currentSymbol;
             StringBuilder valueBuilder = new StringBuilder();
+            ReadNumberSign(valueBuilder);
+            if (!ReadNumberInt(valueBuilder))
+                throw CreateWrongNumberException(beginLine, beginSymbol);
+            if (!ReadNumberFrac(valueBuilder))
+                throw CreateWrongNumberException(beginLine, beginSymbol);
+            if (!ReadNumberExp(valueBuilder))
+                throw CreateWrongNumberException(beginLine, beginSymbol);
+            return new Token(TokenType.Number, valueBuilder.ToString());
+        }
+
+        private void ReadNumberSign(StringBuilder valueBuilder)
+        {
+            char? c = PeekChar(false);
+            if (c.HasValue && c.Value == '-')
+            {
+                valueBuilder.Append('-');
+                NextChar();
+            }
+        }
+
+        private bool ReadNumberInt(StringBuilder valueBuilder)
+        {
+            char? c;
+            c = PeekChar(false);
+            if (!c.HasValue || !IsDigit(c.Value))
+                return false;
+            valueBuilder.Append(c.Value);
+            NextChar();
+            if (c.Value == '0')
+                return true;
             while (true)
             {
-                char? c = PeekChar(false);
-                if (!c.HasValue)
-                    break;
-                bool numeric = 
-                    (c.Value >= '0' && c.Value <= '9') || 
-                    c.Value == '-' || c.Value == '.' || 
-                    c.Value == 'e' || c.Value == 'E';
-                if (!numeric)
+                c = PeekChar(false);
+                if (!c.HasValue || !IsDigit(c.Value))
                     break;
                 valueBuilder.Append(c);
                 NextChar();
             }
-            if (valueBuilder.Length == 0)
-                throw CreateWrongNumberException(beginLine, beginSymbol);
-            return new Token(TokenType.Number, valueBuilder.ToString());
+            return true;
+        }
+
+        private bool ReadNumberFrac(StringBuilder valueBuilder)
+        {
+            char? c;
+            c = PeekChar(false);
+            if (!c.HasValue || c.Value != '.')
+                return true;
+            valueBuilder.Append('.');
+            NextChar();
+            c = PeekChar(false);
+            if (!c.HasValue || !IsDigit(c.Value))
+                return false;
+            valueBuilder.Append(c.Value);
+            NextChar();
+            while (true)
+            {
+                c = PeekChar(false);
+                if (!c.HasValue || !IsDigit(c.Value))
+                    break;
+                valueBuilder.Append(c);
+                NextChar();
+            }
+            return true;
+        }
+
+        private bool ReadNumberExp(StringBuilder valueBuilder)
+        {
+            char? c;
+            c = PeekChar(false);
+            if (!c.HasValue)
+                return true;
+            if (c.Value != 'e' && c.Value != 'E')
+                return true;
+            valueBuilder.Append(c.Value);
+            NextChar();
+            c = PeekChar(false);
+            if (!c.HasValue)
+                return false;
+            if (c.Value == '-' || c.Value == '+')
+            {
+                valueBuilder.Append(c.Value);
+                NextChar();
+                c = PeekChar(false);
+            }
+            if (!c.HasValue || !IsDigit(c.Value))
+                return false;
+            valueBuilder.Append(c.Value);
+            NextChar();
+            while (true)
+            {
+                c = PeekChar(false);
+                if (!c.HasValue || !IsDigit(c.Value))
+                    break;
+                valueBuilder.Append(c);
+                NextChar();
+            }
+            return true;
         }
 
         private Token ReadLiteral()
@@ -236,7 +316,7 @@ namespace Dotson.Reading
             int beginSymbol = currentSymbol;
             char? c = PeekChar(false);
             if (!c.HasValue)
-                throw CreateWrongBooleanException(beginLine, beginSymbol);
+                throw CreateWrongLiteralException(beginLine, beginSymbol);
             foreach (string literal in acceptedLiterals)
             {
                 if (c.Value != literal[0])
@@ -246,12 +326,12 @@ namespace Dotson.Reading
                 {
                     c = PeekChar(false);
                     if (!c.HasValue || c.Value != literal[i])
-                        throw CreateWrongBooleanException(beginLine, beginSymbol);
+                        throw CreateWrongLiteralException(beginLine, beginSymbol);
                     NextChar();
                 }
                 return new Token(TokenType.Literal, literal);
             }
-            throw CreateWrongBooleanException(beginLine, beginSymbol);
+            throw CreateWrongLiteralException(beginLine, beginSymbol);
         }
 
         private Token InternalMoveNext()
