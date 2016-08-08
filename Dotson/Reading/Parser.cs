@@ -125,22 +125,12 @@ namespace Dotson.Reading
             return result;
         }
 
-        private JsonNode ParseInteger()
+        private JsonNode ParseNumber()
         {
-            if (lexer.GetCurrentTokenType() != TokenType.Integer)
-                throw CreateExpectedException(lexer.GetCurrentToken(), TokenType.Integer);
+            if (lexer.GetCurrentTokenType() != TokenType.Number)
+                throw CreateExpectedException(lexer.GetCurrentToken(), TokenType.Number);
             JsonNode result = new JsonNode(NodeType.Integer);
             result.Assign(Convert.ToInt64(lexer.GetCurrentToken().Value));
-            lexer.NextToken();
-            return result;
-        }
-
-        private JsonNode ParseFloat()
-        {
-            if (lexer.GetCurrentTokenType() != TokenType.Float)
-                throw CreateExpectedException(lexer.GetCurrentToken(), TokenType.Float);
-            JsonNode result = new JsonNode(NodeType.Float);
-            result.Assign(Convert.ToSingle(lexer.GetCurrentToken().Value));
             lexer.NextToken();
             return result;
         }
@@ -172,10 +162,8 @@ namespace Dotson.Reading
                 return ParseList();
             if (lexer.GetCurrentTokenType() == TokenType.String)
                 return ParseString();
-            if (lexer.GetCurrentTokenType() == TokenType.Integer)
-                return ParseInteger();
-            if (lexer.GetCurrentTokenType() == TokenType.Float)
-                return ParseFloat();
+            if (lexer.GetCurrentTokenType() == TokenType.Number)
+                return ParseNumber();
             if (lexer.GetCurrentTokenType() == TokenType.Literal)
                 return ParseLiteral();
             throw new Exception();

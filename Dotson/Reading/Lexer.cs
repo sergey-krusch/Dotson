@@ -211,7 +211,6 @@ namespace Dotson.Reading
             int beginLine = currentLine;
             int beginSymbol = currentSymbol;
             StringBuilder valueBuilder = new StringBuilder();
-            bool integer = true;
             while (true)
             {
                 char? c = PeekChar(false);
@@ -223,25 +222,12 @@ namespace Dotson.Reading
                     c.Value == 'e' || c.Value == 'E';
                 if (!numeric)
                     break;
-                if (c == '.')
-                    integer = false;
                 valueBuilder.Append(c);
                 NextChar();
             }
             if (valueBuilder.Length == 0)
                 throw CreateWrongNumberException(beginLine, beginSymbol);
-            string value = valueBuilder.ToString();
-            if (integer)
-            {
-                long intParseResult;
-                if (!Int64.TryParse(value, out intParseResult))
-                    throw CreateWrongNumberException(beginLine, beginSymbol);
-                return new Token(TokenType.Integer, value);
-            }
-            float floatParseResult;
-            if (!Single.TryParse(value, out floatParseResult))
-                throw CreateWrongNumberException(beginLine, beginSymbol);
-            return new Token(TokenType.Float, value);
+            return new Token(TokenType.Number, valueBuilder.ToString());
         }
 
         private Token ReadLiteral()

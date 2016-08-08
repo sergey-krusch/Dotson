@@ -10,8 +10,7 @@
         Comma,
         Colon,
         String,
-        Integer,
-        Float,
+        Number,
         Literal
     }
 }
