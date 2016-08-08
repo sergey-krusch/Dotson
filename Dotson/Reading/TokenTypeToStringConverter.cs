@@ -19,8 +19,7 @@ namespace Dotson.Reading
             conversions.Add(TokenType.String, "string");
             conversions.Add(TokenType.Integer, "integer");
             conversions.Add(TokenType.Float, "float");
-            conversions.Add(TokenType.Boolean, "boolean");
-            conversions.Add(TokenType.None, "none");
+            conversions.Add(TokenType.Literal, "literal");
 
             foreach (var value in Enum.GetValues(typeof(TokenType)))
             {

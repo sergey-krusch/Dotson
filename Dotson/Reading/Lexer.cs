@@ -8,8 +8,19 @@ namespace Dotson.Reading
     internal class Lexer
     {
         private const int surroundingRadius = 512;
-        private static readonly string[] booleanLiterals = { "true", "false" };
-        private const string noneLiteral = "none";
+        private static readonly string[] acceptedLiterals = {
+            Consts.TrueLiteral,
+            Consts.FalseLiteral,
+            Consts.NoneLiteral,
+        };
+
+        static Lexer()
+        {
+            for (int i = 0; i < acceptedLiterals.Length - 1; ++i)
+                for (int j = i + 1; j < acceptedLiterals.Length; ++j)
+                    if (acceptedLiterals[i][0] == acceptedLiterals[j][0])
+                        throw new Exception("No two literals should start with the same character");
+        }
 
         private readonly StreamReader reader;
         private Token currentToken;
@@ -233,14 +244,14 @@ namespace Dotson.Reading
             return new Token(TokenType.Float, value);
         }
 
-        private Token ReadBoolean()
+        private Token ReadLiteral()
         {
             int beginLine = currentLine;
             int beginSymbol = currentSymbol;
             char? c = PeekChar(false);
             if (!c.HasValue)
                 throw CreateWrongBooleanException(beginLine, beginSymbol);
-            foreach (string literal in booleanLiterals)
+            foreach (string literal in acceptedLiterals)
             {
                 if (c.Value != literal[0])
                     continue;
@@ -252,23 +263,9 @@ namespace Dotson.Reading
                         throw CreateWrongBooleanException(beginLine, beginSymbol);
                     NextChar();
                 }
-                return new Token(TokenType.Boolean, literal);
+                return new Token(TokenType.Literal, literal);
             }
             throw CreateWrongBooleanException(beginLine, beginSymbol);
-        }
-
-        private Token ReadNone()
-        {
-            int beginLine = currentLine;
-            int beginSymbol = currentSymbol;
-            for (int i = 0; i < noneLiteral.Length; i++)
-            {
-                char? c = PeekChar(false);
-                if (!c.HasValue || c.Value != noneLiteral[i])
-                    throw CreateWrongLiteralException(beginLine, beginSymbol);
-                NextChar();
-            }
-            return new Token(TokenType.None);
         }
 
         private Token InternalMoveNext()
@@ -313,9 +310,8 @@ namespace Dotson.Reading
                     return ReadNumber();
                 case 't':
                 case 'f':
-                    return ReadBoolean();
                 case 'n':
-                    return ReadNone();
+                    return ReadLiteral();
                 default:
                     throw CreateException(string.Format("Unexpected symbol \"{0}\".", c), currentLine, currentSymbol);
             }
@@ -330,6 +326,5 @@ namespace Dotson.Reading
         {
             return currentToken;
         }
-
     }
 }

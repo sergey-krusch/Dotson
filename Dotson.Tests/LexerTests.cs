@@ -8,21 +8,21 @@ namespace Dotson.Reading
     public class LexerTests
     {
         [TestMethod]
-        public void AcceptCorrectBools()
+        public void AcceptCorrectLiterals()
         {
-            var input = new[] { "true", "false" };
+            var input = new[] { "true", "false", "none" };
             foreach (var i in input)
             {
                 var l = new Lexer(new StringReader(i));
-                Assert.AreEqual(TokenType.Boolean, l.PeekToken().TokenType);
+                Assert.AreEqual(TokenType.Literal, l.PeekToken().TokenType);
                 Assert.AreEqual(i, l.PeekToken().Value);
             }
         }
 
         [TestMethod]
-        public void ThrowIncorrectBools()
+        public void ThrowIncorrectLiterals()
         {
-            var input = new[] { "True", "False" };
+            var input = new[] { "True", "Yes", "yes", "False", "No", "no", "None", "Null", "null", "abc" };
             foreach (var i in input)
             {
                 Exception ee = null;

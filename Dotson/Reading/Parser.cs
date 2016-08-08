@@ -145,21 +145,19 @@ namespace Dotson.Reading
             return result;
         }
 
-        private JsonNode ParseBoolean()
+        private JsonNode ParseLiteral()
         {
-            if (lexer.GetCurrentTokenType() != TokenType.Boolean)
-                throw CreateExpectedException(lexer.GetCurrentToken(), TokenType.Boolean);
-            JsonNode result = new JsonNode(NodeType.Boolean);
-            result.Assign(Convert.ToBoolean(lexer.GetCurrentToken().Value));
-            lexer.NextToken();
-            return result;
-        }
-
-        private JsonNode ParseNone()
-        {
-            if (lexer.GetCurrentTokenType() != TokenType.None)
-                throw CreateExpectedException(lexer.GetCurrentToken(), TokenType.None);
-            JsonNode result = new JsonNode(NodeType.None);
+            if (lexer.GetCurrentTokenType() != TokenType.Literal)
+                throw CreateExpectedException(lexer.GetCurrentToken(), TokenType.Literal);
+            string value = lexer.GetCurrentToken().Value;
+            JsonNode result;
+            if (value == Consts.NoneLiteral)
+                result = new JsonNode(NodeType.None);
+            else
+            {
+                result = new JsonNode(NodeType.Boolean);
+                result.Assign(value == Consts.TrueLiteral);
+            }
             lexer.NextToken();
             return result;
         }
@@ -178,10 +176,8 @@ namespace Dotson.Reading
                 return ParseInteger();
             if (lexer.GetCurrentTokenType() == TokenType.Float)
                 return ParseFloat();
-            if (lexer.GetCurrentTokenType() == TokenType.Boolean)
-                return ParseBoolean();
-            if (lexer.GetCurrentTokenType() == TokenType.None)
-                return ParseNone();
+            if (lexer.GetCurrentTokenType() == TokenType.Literal)
+                return ParseLiteral();
             throw new Exception();
         }
 

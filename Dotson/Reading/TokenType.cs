@@ -12,7 +12,6 @@
         String,
         Integer,
         Float,
-        Boolean,
-        None
+        Literal
     }
 }
