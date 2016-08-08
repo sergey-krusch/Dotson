@@ -362,7 +362,6 @@ namespace Dotson.Reading
                 case '"':
                     return ReadString();
                 case '-':
-                case '.':
                 case '0':
                 case '1':
                 case '2':
