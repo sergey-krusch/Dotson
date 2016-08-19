@@ -43,8 +43,8 @@ namespace Dotson.Reading
             foreach (var i in input)
             {
                 var l = new Lexer(new StringReader(i));
-                Assert.AreEqual(TokenType.Literal, l.PeekToken().TokenType);
-                Assert.AreEqual(i, l.PeekToken().Value);
+                Assert.AreEqual(TokenType.Literal, l.GetCurrentToken().TokenType);
+                Assert.AreEqual(i, l.GetCurrentToken().Value);
             }
         }
 
@@ -58,7 +58,7 @@ namespace Dotson.Reading
                 try
                 {
                     var l = new Lexer(new StringReader(i));
-                    l.PeekToken();
+                    l.GetCurrentToken();
                 }
                 catch (Exception e)
                 {
@@ -74,13 +74,13 @@ namespace Dotson.Reading
             foreach (var i in EnumerateCorrectNumbers())
             {
                 var l = new Lexer(new StringReader(i));
-                Assert.AreEqual(TokenType.Number, l.PeekToken().TokenType);
-                if (i != l.PeekToken().Value)
+                Assert.AreEqual(TokenType.Number, l.GetCurrentToken().TokenType);
+                if (i != l.GetCurrentToken().Value)
                 {
                     l = new Lexer(new StringReader(i));
-                    l.PeekToken();
+                    l.GetCurrentToken();
                 }
-                Assert.AreEqual(i, l.PeekToken().Value);
+                Assert.AreEqual(i, l.GetCurrentToken().Value);
             }
         }
 
@@ -102,7 +102,7 @@ namespace Dotson.Reading
                 try
                 {
                     var l = new Lexer(new StringReader(i));
-                    l.PeekToken();
+                    l.GetCurrentToken();
                 }
                 catch (Exception e)
                 {
@@ -118,13 +118,13 @@ namespace Dotson.Reading
             foreach (var i in EnumerateCorrectStrings())
             {
                 var l = new Lexer(new StringReader(i));
-                Assert.AreEqual(TokenType.String, l.PeekToken().TokenType);
-                if (i != l.PeekToken().Value)
+                Assert.AreEqual(TokenType.String, l.GetCurrentToken().TokenType);
+                if (i != l.GetCurrentToken().Value)
                 {
                     l = new Lexer(new StringReader(i));
-                    l.PeekToken();
+                    l.GetCurrentToken();
                 }
-                Assert.AreEqual(i, l.PeekToken().Value);
+                Assert.AreEqual(i, l.GetCurrentToken().Value);
             }
         }
 
@@ -142,7 +142,7 @@ namespace Dotson.Reading
                 try
                 {
                     var l = new Lexer(new StringReader(i));
-                    l.PeekToken();
+                    l.GetCurrentToken();
                 }
                 catch (Exception e)
                 {
@@ -297,8 +297,8 @@ namespace Dotson.Reading
         {
             foreach (var t in expected)
             {
-                Assert.AreEqual(t.TokenType, lexer.PeekToken().TokenType);
-                Assert.AreEqual(t.Value, lexer.PeekToken().Value);
+                Assert.AreEqual(t.TokenType, lexer.GetCurrentToken().TokenType);
+                Assert.AreEqual(t.Value, lexer.GetCurrentToken().Value);
                 lexer.NextToken();
             }
         }

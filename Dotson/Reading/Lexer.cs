@@ -44,6 +44,11 @@ namespace Dotson.Reading
             NextToken();
         }
 
+        public void NextToken()
+        {
+            currentToken = InternalMoveNext();
+        }
+
         public Token GetCurrentToken()
         {
             return currentToken;
@@ -392,16 +397,6 @@ namespace Dotson.Reading
                 default:
                     throw CreateException(string.Format("Unexpected symbol \"{0}\".", c), currentLine, currentSymbol);
             }
-        }
-
-        public void NextToken()
-        {
-            currentToken = InternalMoveNext();
-        }
-
-        public Token PeekToken()
-        {
-            return currentToken;
         }
     }
 }
