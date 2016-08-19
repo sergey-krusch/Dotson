@@ -81,8 +81,46 @@ namespace Dotson.Reading
                 {
                     ee = e;
                 }
-                if (ee == null)
-                    ee = null;
+                Assert.IsNotNull(ee);
+            }
+        }
+
+        [TestMethod]
+        public void AcceptCorrectStrings()
+        {
+            foreach (var i in EnumerateCorrectStrings())
+            {
+                var l = new Lexer(new StringReader(i));
+                Assert.AreEqual(TokenType.String, l.PeekToken().TokenType);
+                if (i != l.PeekToken().Value)
+                {
+                    l = new Lexer(new StringReader(i));
+                    l.PeekToken();
+                }
+                Assert.AreEqual(i, l.PeekToken().Value);
+            }
+        }
+
+        [TestMethod]
+        public void ThrowIncorrectStrings()
+        {
+            var input = new List<string>();
+            input.AddRange(new[] { @"""", @"""\""", @"""\u0022", @"""abc" });
+            input.AddRange(Quote(@"\B", @"\F", @"\N", @"\R", @"\T", @"\a", @"\#"));
+            input.AddRange(Quote(@"\U0012", @"\u0", @"\u01", @"\u012", @"\u000G", @"\u000g"));
+            input.AddRange(Quote("\u0011\u0000"));
+            foreach (var i in input)
+            {
+                Exception ee = null;
+                try
+                {
+                    var l = new Lexer(new StringReader(i));
+                    l.PeekToken();
+                }
+                catch (Exception e)
+                {
+                    ee = e;
+                }
                 Assert.IsNotNull(ee);
             }
         }
@@ -136,16 +174,60 @@ namespace Dotson.Reading
                             {
                                 sb.Append(expSuffix);
                                 yield return sb.ToString();
-                                sb.Remove(sb.Length - expSuffix.Length, expSuffix.Length);
+                                Pop(sb, expSuffix);
                             }
-                            sb.Remove(sb.Length - expPrefix.Length, expPrefix.Length);
+                            Pop(sb, expPrefix);
                         }
-                        sb.Remove(sb.Length - fraction.Length, fraction.Length);
+                        Pop(sb, fraction);
                     }
-                    sb.Remove(sb.Length - floor.Length, floor.Length);
+                    Pop(sb, floor);
                 }
-                sb.Remove(sb.Length - startSign.Length, startSign.Length);
+                Pop(sb, startSign);
             }
+        }
+
+        private IEnumerable<string> EnumerateCorrectStrings()
+        {
+            yield return @"""""";
+            var charVariants = new[] {
+                @"\""", @"\\", @"\/",
+                @"\b", @"\f", @"\n", @"\r", @"\t",
+                @"\u0000", @"\u1234", @"\u5678", @"\u9012",
+                @"\uabcd", @"\u09ef",
+                @"\uABCD", @"\uEF75",
+                "\x20", "\x21", "\x23", "\x40", "\x5B", "\x5D", "\u1000", "\uF123", "\U000AEF05", "\U0010FFFF"
+            };
+            var sb = new StringBuilder(@"""");
+            var l = charVariants.Length;
+            for (int i = 0; i < l; ++i)
+            {
+                sb.Append(charVariants[i]);
+                for (int j = 0; j < l; ++j)
+                {
+                    sb.Append(charVariants[j]);
+                    for (int k = 0; k < l; ++k)
+                    {
+                        sb.Append(charVariants[k]);
+                        sb.Append('"');
+                        yield return sb.ToString();
+                        sb.Remove(sb.Length - 1, 1);
+                        Pop(sb, charVariants[k]);
+                    }
+                    Pop(sb, charVariants[j]);
+                }
+                Pop(sb, charVariants[i]);
+            }
+        }
+
+        private void Pop(StringBuilder sb, string s)
+        {
+            sb.Remove(sb.Length - s.Length, s.Length);
+        }
+
+        private IEnumerable<string> Quote(params string[] values)
+        {
+            foreach (var v in values)
+                yield return '"' + v + '"';
         }
     }
 }

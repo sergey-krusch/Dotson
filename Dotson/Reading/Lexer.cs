@@ -97,6 +97,14 @@ namespace Dotson.Reading
             return c >= '0' && c <= '9';
         }
 
+        private bool IsHexDigit(char c)
+        {
+            return 
+                (c >= '0' && c <= '9') ||
+                (c >= 'a' && c <= 'f') ||
+                (c >= 'A' && c <= 'F');
+        }
+
         private char? PeekChar(bool skipWhitespaces)
         {
             if (!skipWhitespaces)
@@ -144,7 +152,7 @@ namespace Dotson.Reading
             if (!c.HasValue || c.Value != '"')
                 throw new Exception();
             NextChar();
-            StringBuilder value = new StringBuilder();
+            StringBuilder value = new StringBuilder(@"""");
             while (true)
             {
                 c = PeekChar(false);
@@ -152,58 +160,64 @@ namespace Dotson.Reading
                     throw CreateUnterminatedStringException(beginLine, beginSymbol);
                 if (c.Value == '"')
                 {
+                    value.Append('"');
                     NextChar();
                     break;
                 }
                 if (c.Value == '\\')
                 {
+                    value.Append('\\');
                     NextChar();
-                    c = PeekChar(false);
-                    if (!c.HasValue)
-                        throw CreateUnterminatedStringException(beginLine, beginSymbol);
-                    if (c.Value == 'u' || c.Value == 'U')
-                    {
-                        StringBuilder escapeSequence = new StringBuilder();
-                        for (int i = 0; i < 4; i ++)
-                        {
-                            NextChar();
-                            c = PeekChar(false);
-                            if (!c.HasValue)
-                                throw CreateUnterminatedStringException(beginLine, beginSymbol);
-                            bool hexdigit = 
-                                (c.Value >= '0' && c.Value <= '9') ||
-                                (c.Value >= 'a' && c.Value <= 'f') ||
-                                (c.Value >= 'A' && c.Value <= 'F');
-                            if (!hexdigit)
-                                throw new Exception("Wrong escape sequence.");
-                            escapeSequence.Append(c.Value);
-                        }
-                        value.Append((char) Convert.ToInt32(escapeSequence.ToString(), 16));
-                    }
-                    else if (c.Value == '"')
-                        value.Append('"');
-                    else if (c.Value == '\\')
-                        value.Append('\\');
-                    else if (c.Value == '/')
-                        value.Append('/');
-                    else if (c.Value == 'b')
-                        value.Append('\u0008');
-                    else if (c.Value == 'f')
-                        value.Append('\u000C');
-                    else if (c.Value == 'n')
-                        value.Append('\u000A');
-                    else if (c.Value == 'r')
-                        value.Append('\u000D');
-                    else if (c.Value == 't')
-                        value.Append('\u0009');
-                    else
-                        throw new Exception("Wrong escape sequence.");
+                    ReadEscapedCharacter(value, beginLine, beginSymbol);
+                    NextChar();
+                    continue;
                 }
-                else
-                    value.Append(c.Value);
+                int cv = c.Value;
+                var acceptedCharacter =
+                    cv >= 0x20 && cv <= 0x10FFFF &&
+                    cv != 0x22 && cv != 0x5C;
+                if (!acceptedCharacter)
+                    throw CreateExceptionInCurrentPosition(string.Format(@"Unexpected character %x{0:X}", cv));
+                value.Append(c.Value);
                 NextChar();
             }
             return new Token(TokenType.String, value.ToString());
+        }
+
+        private void ReadEscapedCharacter(StringBuilder valueBuilder, int beginLine, int beginSymbol)
+        {
+            char? c;
+            c = PeekChar(false);
+            if (!c.HasValue)
+                throw CreateUnterminatedStringException(beginLine, beginSymbol);
+            switch (c.Value)
+            {
+                case '"':
+                case '\\':
+                case '/':
+                case 'b':
+                case 'f':
+                case 'n':
+                case 'r':
+                case 't':
+                    valueBuilder.Append(c.Value);
+                    break;
+                case 'u':
+                    valueBuilder.Append(c.Value);
+                    for (int i = 0; i < 4; i++)
+                    {
+                        NextChar();
+                        c = PeekChar(false);
+                        if (!c.HasValue)
+                            throw CreateUnterminatedStringException(beginLine, beginSymbol);
+                        if (!IsHexDigit(c.Value))
+                            throw CreateException("Wrong escape sequence.", beginLine, beginSymbol);
+                        valueBuilder.Append(c.Value);
+                    }
+                    break;
+                default:
+                    throw CreateException("Wrong escape sequence.", beginLine, beginSymbol);
+            }
         }
 
         private Token ReadNumber()
