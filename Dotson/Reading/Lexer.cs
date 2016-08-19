@@ -87,11 +87,6 @@ namespace Dotson.Reading
             return CreateException("Wrong literal.", line, symbol);
         }
 
-        private bool IsNewLineChar(char c)
-        {
-            return c == '\u000A' || c == '\u000B' || c == '\u000C' || c == '\u000D' || c == '\u2028' || c == '\u2029';
-        }
-
         private bool IsDigit(char c)
         {
             return c >= '0' && c <= '9';
@@ -121,17 +116,20 @@ namespace Dotson.Reading
                 if (i == -1)
                     return null;
                 char c = (char) i;
-                if (IsNewLineChar(c))
+                if (c == '\x0A')
                 {
-                    if (c != '\u000A' || !pc.HasValue || pc.Value != '\u000D')
-                        currentLine ++;
+                    if (!pc.HasValue || pc.Value != '\x0D')
+                        currentLine++;
                     currentSymbol = 0;
                 }
-                else
+                else if (c == '\x0D')
                 {
-                    if (!char.IsWhiteSpace(c))
-                        return c;
+                    if (!pc.HasValue || pc.Value != '\x0A')
+                        currentLine++;
+                    currentSymbol = 0;
                 }
+                else if (c != '\x20' && c != '\x09')
+                    return c;
                 pc = c;
                 reader.Read();
                 currentSymbol++;

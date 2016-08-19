@@ -9,6 +9,33 @@ namespace Dotson.Reading
     [TestClass]
     public class LexerTests
     {
+        private static readonly Token TDS = T(TokenType.DictionaryStart, null);
+        private static readonly Token TDE = T(TokenType.DictionaryEnd, null);
+        private static readonly Token TCL = T(TokenType.Colon, null);
+        private static readonly Token TCM = T(TokenType.Comma, null);
+        private static readonly Token TAS = T(TokenType.ArrayStart, null);
+        private static readonly Token TAE = T(TokenType.ArrayEnd, null);
+
+        private static Token T(TokenType @type, string value)
+        {
+            return new Token(@type, value);
+        }
+
+        private static Token TSQ(string s)
+        {
+            return T(TokenType.String, '"' + s + '"');
+        }
+
+        private static Token TN(string s)
+        {
+            return T(TokenType.Number, s);
+        }
+
+        private static Token TL(string s)
+        {
+            return T(TokenType.Literal, s);
+        }
+
         [TestMethod]
         public void AcceptCorrectLiterals()
         {
@@ -125,6 +152,37 @@ namespace Dotson.Reading
             }
         }
 
+        [TestMethod]
+        public void IgnoreWhitespaces()
+        {
+            var input = new[]
+            {
+                Case("\x09\x20\x0A\x0D"),
+                Case("\x20\x09\x0A\x0D{}", TDS, TDE),
+                Case("[\x20\x0A\x09\x0D]", TAS, TAE),
+                Case(":\x20\x0A\x0D\x09", TCL),
+                Case(" false  true\x0A\x20\x0D\x09none  ", TL("false"), TL("true"), TL("none"))
+            };
+            foreach (var c in input)
+                CheckLexerOutput(c.Item2, new Lexer(new StringReader(c.Item1)));
+        }
+
+        [TestMethod]
+        public void AcceptStructuralCharacters()
+        {
+            var input = new[]
+            {
+                Case("{}[]:,", TDS, TDE, TAS, TAE, TCL, TCM),
+                Case("{{}}", TDS, TDS, TDE, TDE),
+                Case("{{0.7}}", TDS, TDS, TN("0.7"), TDE, TDE),
+                Case("{{:}}", TDS, TDS, TCL, TDE, TDE),
+                Case("[[],[]]", TAS, TAS, TAE, TCM, TAS, TAE, TAE),
+                Case(@"{""a"":[],""b"":{}}", TDS, TSQ("a"), TCL, TAS, TAE, TCM, TSQ("b"), TCL, TDS, TDE, TDE),
+            };
+            foreach (var c in input)
+                CheckLexerOutput(c.Item2, new Lexer(new StringReader(c.Item1)));
+        }
+
         private IEnumerable<string> EnumerateCorrectNumbers()
         {
             var startSignVariants = new[] { "", "-" };
@@ -228,6 +286,21 @@ namespace Dotson.Reading
         {
             foreach (var v in values)
                 yield return '"' + v + '"';
+        }
+
+        private Tuple<string, Token[]> Case(string input, params Token[] output)
+        {
+            return new Tuple<string, Token[]>(input, output);
+        }
+
+        private void CheckLexerOutput(IEnumerable<Token> expected, Lexer lexer)
+        {
+            foreach (var t in expected)
+            {
+                Assert.AreEqual(t.TokenType, lexer.PeekToken().TokenType);
+                Assert.AreEqual(t.Value, lexer.PeekToken().Value);
+                lexer.NextToken();
+            }
         }
     }
 }
